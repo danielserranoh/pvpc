@@ -1,3 +1,3 @@
 # pvpc
 
-Retrive PVPC data an calculate electric consumption
+Retrive PVPC data from REE API and calculate electric consumption

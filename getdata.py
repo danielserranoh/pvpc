@@ -1,5 +1,7 @@
 import requests
+from requests.exceptions import HTTPError
 from datetime import datetime, timedelta
+import json
 
 '''
 IDEA: Montar un cli que también sea una API que permta recuperar 
@@ -16,10 +18,17 @@ las peticiones deberían ser:
 .days(X) = devuelve los X ultimos días desde hoy - tiene que parsear X
 
 
+.lastfullweek = ultima semana completa
+.lastfullmonth
 
+# PRUEBAS CON FECHAS PARA APRENDER
+#print("Pruebas con fechas")
+#fecha_hora_str = now.strftime('%Y%m%d%H%M')
+#now_iso = now.strftime('%Y-%m-%dT%H:%M')
 '''
 
 now = datetime.now()
+
 
 # end_time = now.isoformat(timespec='minutes')
 end_time = now
@@ -32,59 +41,92 @@ end_time = now
 
 
 # NOW
-print("NOW date arguments are")
+print("\nNOW date arguments are")
 delta = timedelta(hours=1)
 start_time = now - delta
 ## start_time = now.replace(hour=now.hour-1)
-print(start_time)
-print(end_time)
+#print(start_time)
+#print(end_time)
+print(" 🟢 " + start_time.strftime('%Y-%m-%dT%H:%M'))
+print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 
 # TODAY
-print("TODAY date arguments are")
+print("\nTODAY date arguments are")
 start_time = now.replace(hour=0).replace(minute=00)
 end_time = now.replace(hour=23).replace(minute=59)
-print(start_time)
-print(end_time)
-
-# LASTDAY
-print("LASTDAY date arguments are")
-delta = timedelta(seconds=0)
-if now.hour > 19 :
-    # El dato el de mañana
-    delta = timedelta(days=1)
-start_deta = (now+delta).replace(hour=00).replace(minute=00)
-end_time = (now+delta).replace(hour=23).replace(minute=59)
-print(start_time)
-print(end_time)
+#print( start_time)
+#print(end_time)
+print(" 🟢 " + start_time.strftime('%Y-%m-%dT%H:%M'))
+print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 
 # WEEK
-print("WEEK date arguments are")
+print("\nWEEK date arguments are")
 delta = timedelta(weeks=1)
-start_time = now - delta
-print(start_time)
-print(end_time)
+start_time = start_time - delta
+#print(start_time)
+#print(end_time)
+print(" 🟢 " + start_time.strftime('%Y-%m-%dT%H:%M'))
+print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 
 # MONTH
-print("MONTH date arguments are")
+print("\nMONTH date arguments are")
 # El argumento puede ser 28, 29, 30 o 31 en funcion del mes y de si es año bisiento
 #Por otro lado, el argumento puede ser el mes completo
 delta = timedelta(days=30)
-start_time = now - delta
-print(start_time)
-print(end_time)
+start_time = start_time - delta
+#print(start_time)
+#print(end_time)
+print(" 🟢 " + start_time.strftime('%Y-%m-%dT%H:%M'))
+print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 
-api_url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?"
-url = (api_url + 'start_date=' + start_time.isoformat(timespec='minutes') + '&' + 'end_date='+end_time.isoformat(timespec='minutes') + '&time_trunc=hour')
+# LASTDAY
+print("\nLASTDAY date arguments are")
+delta = timedelta(seconds=0)
+if now.hour > 19 :
+    # Pasadas las 20 horas está disponible el dato del día siguiente
+    delta = timedelta(days=1)
+start_time = (now+delta).replace(hour=00).replace(minute=00)
+end_time = (now+delta).replace(hour=23).replace(minute=59)
+#print(start_time)
+#print(end_time)
+print(" 🟢 " + start_time.strftime('%Y-%m-%dT%H:%M'))
+print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
+
+
+
+api_endpoint = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?"
+url = (api_endpoint + 'start_date=' + start_time.isoformat(timespec='minutes') + '&' + 'end_date='+end_time.isoformat(timespec='minutes') + '&time_trunc=hour')
 #url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=2023-01-01T00:00&end_date=2023-01-17T23:59&time_trunc=hour"
-print(url)
-# PRUEBAS CON FECHAS PARA APRENDER
-#print("Pruebas con fechas")
-fecha_hora_str = now.strftime('%Y%m%d%H%M')
-now_iso = now.strftime('%Y-%m-%dT%H:%M')
-
-#print(fecha_hora_str)
-#print(now_iso)
+print("\n La url de llamada a la api es: " + url)
 
 
-#r = requests.get(url)
-#print(r.text)
+
+
+try:
+    response = requests.get(
+        api_endpoint,
+        params={
+            'start_date' : start_time.isoformat(timespec='minutes'),
+            'end_date': end_time.isoformat(timespec='minutes'),
+            'time_trunc': 'hour'
+            },
+        )
+
+    # If the response was successful, no Exception will be raised
+    response.raise_for_status()
+except HTTPError as http_err:
+    print(f'HTTP error occurred: {http_err}')  # Python 3.6
+except Exception as err:
+    print(f'Other error occurred: {err}')  # Python 3.6
+else:
+    print('Success!')
+    # Deberia corresponder el filename al rango de fechas en lugar de la fecha de muestra?
+    filename = "./data/" + now.strftime('%Y%m%d%H%M') + ".json"
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(response.json(), f, ensure_ascii=False, indent=4)
+
+
+
+#pvpc = requests.get(url)
+#print(pvpc.text)
+
