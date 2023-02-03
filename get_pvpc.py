@@ -1,12 +1,14 @@
+
 import requests
 from requests.exceptions import HTTPError
 from datetime import datetime, timedelta
 import json
+#from rich import print
 
 '''
-IDEA: Montar un cli que también sea una API que permta recuperar 
-Coger la fecha actual
-Comprobar si con más o menos de las 20:00 CET españa, que es la hora a la que publican los nuevos datos del día siguente"
+IDEA: Montar un CLI que también sea una API que permta recuperar los datos de PVPC
+
+A las 20:00 CET España es la hora a la que publican los nuevos datos del día siguente
 
 las peticiones deberían ser: 
 .now = la ultima hora desde ahora (H -> H-1)
@@ -28,16 +30,9 @@ las peticiones deberían ser:
 '''
 
 now = datetime.now()
-
-
-# end_time = now.isoformat(timespec='minutes')
 end_time = now
+#end_time = now.isoformat(timespec='minutes')
 #end_time_str = now.strftime('%Y%m%d%H%M')
-#print(end_time_str)
-#end_time_left=end_time.split('T')
-
-
-
 
 
 # NOW
@@ -82,6 +77,7 @@ print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 # LASTDAY
 print("\nLASTDAY date arguments are")
 delta = timedelta(seconds=0)
+# Vistos los datos, seguramente hubiese que añadir: and now.minute > 17
 if now.hour > 19 :
     # Pasadas las 20 horas está disponible el dato del día siguiente
     delta = timedelta(days=1)
@@ -97,7 +93,7 @@ print(" 🔴 " + end_time.strftime('%Y-%m-%dT%H:%M'))
 api_endpoint = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?"
 url = (api_endpoint + 'start_date=' + start_time.isoformat(timespec='minutes') + '&' + 'end_date='+end_time.isoformat(timespec='minutes') + '&time_trunc=hour')
 #url = "https://apidatos.ree.es/es/datos/mercados/precios-mercados-tiempo-real?start_date=2023-01-01T00:00&end_date=2023-01-17T23:59&time_trunc=hour"
-print("\n La url de llamada a la api es: " + url)
+print("\nAPI url call: " + url)
 
 
 
@@ -119,7 +115,7 @@ except HTTPError as http_err:
 except Exception as err:
     print(f'Other error occurred: {err}')  # Python 3.6
 else:
-    print('Success!')
+    print('Success! API data retrieved')
     # Deberia corresponder el filename al rango de fechas en lugar de la fecha de muestra?
     filename = "./data/" + now.strftime('%Y%m%d%H%M') + ".json"
     with open(filename, 'w', encoding='utf-8') as f:
@@ -129,4 +125,24 @@ else:
 
 #pvpc = requests.get(url)
 #print(pvpc.text)
+
+# Inspect some attributes of the `requests` (might be doing this for validation before saving the data)
+json_response = response.json()
+header = json_response["data"]["attributes"]
+pvpc_dict = json_response["included"][0]
+pvpc_data = pvpc_dict["attributes"]["values"]
+
+spot_dict = json_response["included"][1]
+
+print(f'\n{header["title"]}')
+print(f'Fecha actualización: {header["last-update"]}')
+print(f'Datos {pvpc_dict["type"]} recuperados: {len(pvpc_data)}')
+
+
+# Debería poder almacenar estos datos en una DB y añadir reglas en el proceso. 
+# Por ejemplo - pensar si las horas deben ir hardcodeadas o son un param: 
+# Si datetime == fin de semana? : valle
+# elif HH < 8 : valle
+# elif (HH > 9 and HH < 14) or (HH > 17 and HH < 22): punta
+# else: llano
 
