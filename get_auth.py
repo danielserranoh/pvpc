@@ -2,15 +2,19 @@
 
 import requests
 from requests.exceptions import HTTPError
+import json
+from dotenv import load_dotenv
+import os 
 
+load_dotenv()
 auth_endpoint = "https://datadis.es/nikola-auth/tokens/login"
 
 try:
     response = requests.post(
         auth_endpoint,
         params={
-            'username' : "50312009S",
-            'password': "akaneCh@n9",
+            'username' : os.environ.get('username'),
+            'password': os.environ.get('password'),
             },
         )
 
@@ -22,4 +26,9 @@ except Exception as err:
     print(f'Other error occurred: {err}')  # Python 3.6
 else:
     print('Success! API data retrieved')
-    print(response.text)
+    filename = "./.env"
+
+    # Tengo que buscar como sustitur la cadena de texto correspondiente al token
+    with open(filename, 'w', encoding='utf-8') as f:
+        json.dump(response.text, f, ensure_ascii=False, indent=4)
+    
