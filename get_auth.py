@@ -9,7 +9,7 @@ import os
 load_dotenv()
 
 token = os.environ.get('token')
-auth_endpoint = "https://datadis.es/nikola-auth/tokens/login"
+auth_endpoint = 'https://datadis.es/nikola-auth/tokens/login'
 
 try:
     response = requests.post(
@@ -27,14 +27,15 @@ except HTTPError as http_err:
 except Exception as err:
     print(f'Other error occurred: {err}')  # Python 3.6
 else:
-    print('Success! API data retrieved')
+    print('Success! Authenticated. Token retrieved')
     new_token = response.text
     #print(new_token)
     # Sustitur la cadena de texto correspondiente al token
-    with open("./.env", "r+") as f:
+    with open('./.env', 'r+') as f:
         file = f.read()
     file = file.replace(token, new_token)
-    with open("./.env", "w") as f:
+    with open('./.env', 'w') as f:
          f.write(file)
+         print('token saved')
         
     

@@ -9,15 +9,14 @@ from dotenv import load_dotenv
 load_dotenv()
 token = os.environ.get('token')
 cups = os.environ.get('cups')
+
+# dates should be input params
 startDate="2022/06"
 endDate="2022/12"
+
 api_uri = "https://www.datadis.es/api-private/api/"
-
-
 api_endpoint = 'get-max-power'
 url = api_uri + api_endpoint
-
-
 
 try:
     response = requests.get(
