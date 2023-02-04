@@ -7,6 +7,8 @@ from dotenv import load_dotenv
 import os 
 
 load_dotenv()
+
+token = os.environ.get('token')
 auth_endpoint = "https://datadis.es/nikola-auth/tokens/login"
 
 try:
@@ -26,9 +28,13 @@ except Exception as err:
     print(f'Other error occurred: {err}')  # Python 3.6
 else:
     print('Success! API data retrieved')
-    filename = "./.env"
-
-    # Tengo que buscar como sustitur la cadena de texto correspondiente al token
-    with open(filename, 'w', encoding='utf-8') as f:
-        json.dump(response.text, f, ensure_ascii=False, indent=4)
+    new_token = response.text
+    #print(new_token)
+    # Sustitur la cadena de texto correspondiente al token
+    with open("./.env", "r+") as f:
+        file = f.read()
+    file = file.replace(token, new_token)
+    with open("./.env", "w") as f:
+         f.write(file)
+        
     
